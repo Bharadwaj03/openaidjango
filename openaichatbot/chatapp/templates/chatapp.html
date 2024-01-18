@@ -1,0 +1,25 @@
+<!-- ChatAppProject/chatapp/templates/chatapp.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatApp</title>
+</head>
+<body>
+    <h1>ChatApp</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form }}
+        <button type="submit">Submit</button>
+    </form>
+    <p>User Input: {{ user_input }}</p>
+    <p>OpenAI Response: {{ openai_response }}</p>
+    <ul>
+        {% for doc in all_docs %}
+            <li>{{ doc }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
