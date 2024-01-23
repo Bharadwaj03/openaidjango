@@ -2,12 +2,13 @@
 from django.core.management.base import BaseCommand
 from CustomCommand.embeddingsearch import search_with_embeddings
 from django.core.files.base import ContentFile
+from CustomCommand.models import File
 
 class Command(BaseCommand):
     help = 'Run an embedding-based search using ChromaDB and OpenAI'
 
     def add_arguments(self, parser):
-        parser.add_argument('file_path', type=str, action='store_true', help='Path to the file to be stored')
+        parser.add_argument('file_path', type=str,  help='Path to the file to be stored')
         parser.add_argument('search_string', type=str, help='String to search with embeddings')
         
 
@@ -32,6 +33,6 @@ class Command(BaseCommand):
         result = search_with_embeddings(search_string)
 
         if result:
-            self.stdout.write(self.style.SUCCESS(f'String "{search_string}" found using embeddings'))
+            self.stdout.write(self.style.SUCCESS(f'Result "{search_string}" found using embeddings'))
         else:
-            self.stdout.write(self.style.ERROR(f'String "{search_string}" not found using embeddings'))
+            self.stdout.write(self.style.ERROR(f'Result "{search_string}" not found using embeddings'))

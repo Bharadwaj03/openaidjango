@@ -1,4 +1,5 @@
 import openai
+from CustomCommand.models import File
 import pandas as pd
 import os
 import wget
@@ -23,16 +24,16 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 # wget.download(embeddings_url)
 
 #Reading datas using zipfile incase file is a .zip file
-import zipfile
-with zipfile.ZipFile("vector_database_wikipedia_articles_embedded.zip","r") as zip_ref:
-    zip_ref.extractall("../data")
+# import zipfile
+# with zipfile.ZipFile("vector_database_wikipedia_articles_embedded.zip","r") as zip_ref:
+#     zip_ref.extractall("../data")
 
 # storing data to a variable to 
-article_df = pd.read_csv('../data/extracted-zip-file_name')
+article_df = pd.read_csv('./data/oscars.csv')
 
 # Read vectors from strings back into a list
-article_df['title_vector'] = article_df.title_vector.apply(literal_eval)
-article_df['content_vector'] = article_df.content_vector.apply(literal_eval)
+article_df['category_vector'] = article_df.category_vector.apply(literal_eval)
+article_df['name_vector'] = article_df.name_vector.apply(literal_eval)
 
 # Set vector_id to be a string
 article_df['vector_id'] = article_df['vector_id'].apply(str)
@@ -61,21 +62,21 @@ else:
 
 embedding_function = OpenAIEmbeddingFunction(api_key=os.environ.get('OPENAI_API_KEY'), model_name=EMBEDDING_MODEL)
 
-wikipedia_content_collection = chroma_client.create_collection(name='wikipedia_content', embedding_function=embedding_function)
-wikipedia_title_collection = chroma_client.create_collection(name='wikipedia_titles', embedding_function=embedding_function)
+oscar_category_collection = chroma_client.create_collection(name='oscar_category', embedding_function=embedding_function)
+oscar_name_collection = chroma_client.create_collection(name='oscar_name', embedding_function=embedding_function)
 
 # Populating collections
 
 # Add the content vectors
-wikipedia_content_collection.add(
+oscar_category_collection.add(
     ids=article_df.vector_id.tolist(),
-    embeddings=article_df.content_vector.tolist(),
+    embeddings=article_df.category_vector.tolist(),
 )
 
 # Add the title vectors
-wikipedia_title_collection.add(
+oscar_name_collection.add(
     ids=article_df.vector_id.tolist(),
-    embeddings=article_df.title_vector.tolist(),
+    embeddings=article_df.name_vector.tolist(),
 )
 
 
@@ -92,29 +93,29 @@ def query_collection(collection, query, max_results, dataframe):
     
     return df
 
-title_query_result = query_collection(
-    collection=wikipedia_title_collection,
+category_query_result = query_collection(
+    collection=oscar_category_collection,
     query="modern art in Europe",
     max_results=10,
     dataframe=article_df
 )
-title_query_result.head()
+# title_query_result.head()
 
-content_query_result = query_collection(
-    collection=wikipedia_content_collection,
+name_query_result = query_collection(
+    collection=oscar_name_collection,
     query="Famous battles in Scottish history",
     max_results=10,
     dataframe=article_df
 )
-content_query_result.head()
+# content_query_result.head()
 
 #ykik this is from where
 
 from chromadb import chromadb_client
 import openai
 
-chromadb_client.setup(api_key='YOUR_CHROMADB_API_KEY')
-openai.api_key = 'YOUR_OPENAI_API_KEY'
+# chromadb_client.setup(api_key='YOUR_CHROMADB_API_KEY')
+# openai.api_key = 'YOUR_OPENAI_API_KEY'
 
 def search_with_embeddings(search_string):
     import openai
@@ -126,9 +127,16 @@ def search_with_embeddings(search_string):
 # Chroma's client library for Python
     import chromadb
     EMBEDDING_MODEL = "text-embedding-ada-002"
-    article_df = pd.read_csv('../data/extracted-zip-file_name')
+    article_df = pd.read_csv('../data/oscars.csv')
     # Query ChromaDB for embeddings
     embeddings = chromadb_client.query(search_string)
+
+    name_query_result = query_collection(
+    collection=oscar_name_collection,
+    query="Famous battles in Scottish history",
+    max_results=10,
+    dataframe=article_df
+    )
 
     # Use OpenAI to perform similarity search
     openai_result = openai.Completion.create(
@@ -145,7 +153,7 @@ def search_with_embeddings(search_string):
     # Example: Check if the similarity score is above a certain threshold
     similarity_threshold = 0.8
     if calculate_similarity(embeddings, openai_embedding) > similarity_threshold:
-        return True
+        return search_string
     else:
         return False
 
